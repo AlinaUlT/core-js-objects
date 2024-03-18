@@ -360,32 +360,75 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selectors: '',
+
+  selectorOrder: {
+    element: 1,
+    id: 2,
+    class: 3,
+    attr: 4,
+    pseudoClass: 5,
+    pseudoElement: 6,
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  createSelector(value, order) {
+    this.checkSelectorOrder(order);
+    const obj = Object.create(this);
+    obj.order = order;
+    obj.selectors = this.selectors + value;
+    return obj;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return this.createSelector(value, this.selectorOrder.element);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return this.createSelector(`#${value}`, this.selectorOrder.id);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return this.createSelector(`.${value}`, this.selectorOrder.class);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return this.createSelector(`[${value}]`, this.selectorOrder.attr);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return this.createSelector(`:${value}`, this.selectorOrder.pseudoClass);
+  },
+
+  pseudoElement(value) {
+    return this.createSelector(`::${value}`, this.selectorOrder.pseudoElement);
+  },
+
+  combine(selector1, combinator, selector2) {
+    return this.createSelector(
+      `${selector1.selectors} ${combinator} ${selector2.selectors}`
+    );
+  },
+
+  checkSelectorOrder(order) {
+    if (
+      (this.selectorOrder.id === order ||
+        this.selectorOrder.element === order ||
+        this.selectorOrder.pseudoElement === order) &&
+      this.order === order
+    ) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (this.order > order) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+  },
+
+  stringify() {
+    return this.selectors;
   },
 };
 
